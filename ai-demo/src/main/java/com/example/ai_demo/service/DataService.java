@@ -1,0 +1,89 @@
+package com.example.ai_demo.service;
+
+import com.example.ai_demo.domain.DataPoint;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.ColumnPositionMappingStrategy;
+import com.opencsv.bean.CsvToBeanBuilder;
+import org.springframework.stereotype.Service;
+import java.io.FileReader;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.*;
+
+@Service
+public class DataService {
+
+    public List<DataPoint> getConsecutiveDataPoints(String filePath) throws IOException {
+        List<DataPoint> dataPoints = readCsvData(filePath);//reads the csv into a list
+
+        LocalDateTime startTimestamp = generateRandomTimestamp(dataPoints);
+
+        return findConsecutiveDataPoints(dataPoints, startTimestamp);
+    }
+
+
+    List<DataPoint> readCsvData(String filepath) throws IOException {
+        ColumnPositionMappingStrategy<DataPoint> strategy = new ColumnPositionMappingStrategy<>();
+        strategy.setType(DataPoint.class);
+        // map fields to column indices
+
+        CSVReader reader = new CSVReader(new FileReader("C:\\Users\\corina\\Downloads\\ai-demo\\ai-demo\\src\\main\\java\\com\\example\\ai_demo\\LSEG\\FLTR.csv"));
+        return new CsvToBeanBuilder<DataPoint>(reader)
+                .withMappingStrategy(strategy)
+                .build()
+                .parse();
+    }
+
+
+    public LocalDateTime generateRandomTimestamp(List<DataPoint> dataPoints) {
+
+        LocalDateTime minTimestamp = dataPoints.get(0).getTimestamp();
+        LocalDateTime maxTimestamp = dataPoints.get(dataPoints.size() - 1).getTimestamp();
+
+        LocalDateTime localDateTime = LocalDateTime.now();
+        localDateTime.toInstant(ZoneOffset.ofHours(8));
+        long minEpoch = minTimestamp.toEpochSecond(ZoneId.systemDefault().getRules().getOffset(localDateTime));
+        long maxEpoch = maxTimestamp.toEpochSecond(ZoneId.systemDefault().getRules().getOffset(localDateTime));
+
+        Random random = new Random();
+        long randomEpoch = minEpoch + (long) (random.nextDouble() * (maxEpoch - minEpoch));
+
+        return LocalDateTime.ofEpochSecond(randomEpoch, 0, ZoneOffset.UTC);
+    }
+
+    public List<DataPoint> findConsecutiveDataPoints(List<DataPoint> dataPoints, LocalDateTime startTimestamp) {
+        // Find the index of the closest data point to the startTimestamp
+        int startIndex = findClosestIndex(dataPoints, startTimestamp);
+
+        // Return the next 10 data points
+        return dataPoints.subList(startIndex, Math.min(startIndex + 10, dataPoints.size()));
+    }
+///////////////////////////////////
+
+////////////////////////////////////////////////
+    private int findClosestIndex(List<DataPoint> dataPoints, LocalDateTime targetTimestamp) {
+
+        TreeMap<LocalDateTime, DataPoint> dataPointsMap = new TreeMap<>();
+        for (DataPoint dataPoint : dataPoints) {
+            dataPointsMap.put(dataPoint.getTimestamp(), dataPoint);
+        }
+
+        Map.Entry<LocalDateTime, DataPoint> floorEntry = dataPointsMap.floorEntry(targetTimestamp);
+        Map.Entry<LocalDateTime, DataPoint> ceilingEntry = dataPointsMap.ceilingEntry(targetTimestamp);
+
+        if (floorEntry == null) {
+            return dataPointsMap.size() - 1; // Closest is the last element
+        }
+        if (ceilingEntry == null) {
+            return 0; // Closest is the first element
+        }
+
+        long floorDiff = Math.abs(floorEntry.getKey().toEpochSecond(ZoneOffset.UTC) - targetTimestamp.toEpochSecond(ZoneOffset.UTC));
+        long ceilingDiff = Math.abs(ceilingEntry.getKey().toEpochSecond(ZoneOffset.UTC) - targetTimestamp.toEpochSecond(ZoneOffset.UTC));
+       //////////////////////////////////////
+        List<Map.Entry<LocalDateTime, DataPoint>> list = new ArrayList<>(dataPointsMap.entrySet());
+        return floorDiff <= ceilingDiff ? list.indexOf(floorEntry.getKey()) : list.indexOf(ceilingEntry.getKey());
+    }
+}
