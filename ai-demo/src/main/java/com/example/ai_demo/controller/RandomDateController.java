@@ -23,6 +23,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -45,7 +47,7 @@ public class RandomDateController {
 //        }
 
     @GetMapping("/exportCSV")
-    public void exportCSV(HttpServletResponse response) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException, IOException {
+    public void exportCSV(HttpServletResponse response) throws Exception {
         String fileName = "FLTR.csv";
 
         response.setContentType("text/csv");
@@ -56,7 +58,9 @@ public class RandomDateController {
                 .withOrderedResults(true)
                 .build();
 
-        List<DataPoint> list= dataService.getConsecutiveDataPoints(fileName);
+        List<DataPoint> list= dataService.getConsecutiveDataPoints(
+            Paths.get("C:\\Users\\corina\\Downloads\\ai-demo\\ai-demo\\src\\main\\java\\com\\example\\ai_demo\\LSEG\\FLTR.csv")
+        );
 
        createCsv(list,"com/example/ai_demo/output");
 

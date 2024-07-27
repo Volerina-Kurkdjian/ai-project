@@ -7,20 +7,35 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.stereotype.Service;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
 
 @Service
 public class DataService {
 
-    public List<DataPoint> getConsecutiveDataPoints(String filePath) throws IOException {
-        List<DataPoint> dataPoints = readCsvData(filePath);//reads the csv into a list
+    public List<DataPoint> getConsecutiveDataPoints(Path filePath) throws Exception {
 
-        LocalDateTime startTimestamp = generateRandomTimestamp(dataPoints);
+        List<DataPoint> list = new ArrayList<>();
+        try (Reader reader = Files.newBufferedReader(filePath)) {
+            try (CSVReader csvReader = new CSVReader(reader)) {
+                String[] line;
+                while ((line = csvReader.readNext()) != null) {
+                    list.add(new DataPoint(line));
+                }
+            }
+        }
 
-        return findConsecutiveDataPoints(dataPoints, startTimestamp);
+
+
+//       List<DataPoint> dataPoints=new ArrayList<>();
+
+        LocalDateTime startTimestamp = generateRandomTimestamp(list);
+
+        return findConsecutiveDataPoints(list, startTimestamp);
     }
 
 
@@ -29,11 +44,21 @@ public class DataService {
         strategy.setType(DataPoint.class);
         // map fields to column indices
 
-        CSVReader reader = new CSVReader(new FileReader("C:\\Users\\corina\\Downloads\\ai-demo\\ai-demo\\src\\main\\java\\com\\example\\ai_demo\\LSEG\\FLTR.csv"));
+
+        CSVReader reader = new CSVReader(new FileReader("src/main/java/com/example/ai_demo/LSEG/FLTR.csv"));
+
         return new CsvToBeanBuilder<DataPoint>(reader)
                 .withMappingStrategy(strategy)
                 .build()
                 .parse();
+    }
+
+    public List<String[]> readAllLines(Path filePath) throws Exception {
+        try (Reader reader = Files.newBufferedReader(filePath)) {
+            try (CSVReader csvReader = new CSVReader(reader)) {
+                return csvReader.readAll();
+            }
+        }
     }
 
 
@@ -42,10 +67,8 @@ public class DataService {
         LocalDateTime minTimestamp = dataPoints.get(0).getTimestamp();
         LocalDateTime maxTimestamp = dataPoints.get(dataPoints.size() - 1).getTimestamp();
 
-        LocalDateTime localDateTime = LocalDateTime.now();
-        localDateTime.toInstant(ZoneOffset.ofHours(8));
-        long minEpoch = minTimestamp.toEpochSecond(ZoneId.systemDefault().getRules().getOffset(localDateTime));
-        long maxEpoch = maxTimestamp.toEpochSecond(ZoneId.systemDefault().getRules().getOffset(localDateTime));
+        long minEpoch = minTimestamp.toEpochSecond(ZoneOffset.UTC);
+        long maxEpoch = maxTimestamp.toEpochSecond(ZoneOffset.UTC);
 
         Random random = new Random();
         long randomEpoch = minEpoch + (long) (random.nextDouble() * (maxEpoch - minEpoch));
@@ -58,7 +81,7 @@ public class DataService {
         int startIndex = findClosestIndex(dataPoints, startTimestamp);
 
         // Return the next 10 data points
-        return dataPoints.subList(startIndex, Math.min(startIndex + 10, dataPoints.size()));
+        return dataPoints.subList(startIndex, Math.min(startIndex + 10, dataPoints.size()-1));
     }
 ///////////////////////////////////
 
