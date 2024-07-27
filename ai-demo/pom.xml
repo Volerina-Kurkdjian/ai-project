@@ -36,12 +36,17 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+<!--		<dependency>-->
+<!--			<groupId>com.opencsv</groupId>-->
+<!--			<artifactId>opencsv</artifactId>-->
+<!--			<version>5.8</version>-->
+<!--		</dependency>-->
+
+
 		<dependency>
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
-			<version>5.8</version>
-		</dependency>
-
+			<version>5.9</version> </dependency>
 
 
 		<dependency>
@@ -53,6 +58,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.example</groupId>
+			<artifactId>ai-demo</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

@@ -61,4 +61,12 @@ public class DataPoint {
                 '}';
     }
 
+    public String[] toCsvLine() {
+        return new String[]{
+            StockID,
+            timestamp.toString(),
+            priceValue.toString()
+        };
+
+    }
 }

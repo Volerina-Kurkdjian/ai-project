@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,12 +28,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+
+
 @RestController
 @RequestMapping
+@Component
 public class RandomDateController {
 
          @Autowired
         private DataService dataService;
+
+
+//         BeanToCsvMappingStrategy<DataPoint> strategy = new BeanToCsvMappingStrategy<>();
+//        strategy.setType(DataPoint.class);
 
 //        @GetMapping("/csv/{filename}")
 //        public ResponseEntity<byte[]> getCsv(@PathVariable String filename) throws IOException {
@@ -62,19 +70,34 @@ public class RandomDateController {
             Paths.get("C:\\Users\\corina\\Downloads\\ai-demo\\ai-demo\\src\\main\\java\\com\\example\\ai_demo\\LSEG\\FLTR.csv")
         );
 
-       createCsv(list,"com/example/ai_demo/output");
+       createCsv(list,"C:\\Users\\corina\\Downloads\\ai-demo\\ai-demo\\src\\main\\java\\com\\example\\ai_demo\\output\\out.csv");
 
     }
 
     public static void createCsv(List<DataPoint> datas, String fileName) throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
-        try (CSVWriter writer = new CSVWriter(new FileWriter(fileName))) {
-            StatefulBeanToCsv<DataPoint> beanToCsv = new StatefulBeanToCsvBuilder<DataPoint>(writer)
-                    .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-                    .build();
-            beanToCsv.write(datas);
 
-        }
+
+//            StatefulBeanToCsv<DataPoint> beanToCsv = new StatefulBeanToCsvBuilder<DataPoint>(writer)
+//                    .withMappingStrategy()
+//                    .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+//                    .build();
+//            beanToCsv.write(datas);
+
+            try (CSVWriter writer = new CSVWriter(new FileWriter(fileName))) {
+                for (DataPoint line : datas) {
+                    writer.writeNext(line.toCsvLine());
+                }
+            }}
+
     }
+
+//    public String writeLineByLine(List<String[]> lines, Path path) throws Exception {
+//        try (CSVWriter writer = new CSVWriter(new FileWriter(path.toString()))) {
+//            for (String[] line : lines) {
+//                writer.writeNext(line);
+//            }
+//            return Helpers.readFile(path);
+//        }
 
 
 //    @GetMapping("/users/csv-stream")
@@ -101,7 +124,7 @@ public class RandomDateController {
 //    }
 
 
-}
+
 
 
 

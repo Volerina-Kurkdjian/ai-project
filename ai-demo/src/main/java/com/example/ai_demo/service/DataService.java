@@ -106,7 +106,14 @@ public class DataService {
         long floorDiff = Math.abs(floorEntry.getKey().toEpochSecond(ZoneOffset.UTC) - targetTimestamp.toEpochSecond(ZoneOffset.UTC));
         long ceilingDiff = Math.abs(ceilingEntry.getKey().toEpochSecond(ZoneOffset.UTC) - targetTimestamp.toEpochSecond(ZoneOffset.UTC));
        //////////////////////////////////////
+        List<DataPoint> valuesList = new ArrayList<>(dataPointsMap.values());
+
         List<Map.Entry<LocalDateTime, DataPoint>> list = new ArrayList<>(dataPointsMap.entrySet());
-        return floorDiff <= ceilingDiff ? list.indexOf(floorEntry.getKey()) : list.indexOf(ceilingEntry.getKey());
+
+        for (LocalDateTime key : dataPointsMap.keySet()) {
+            int index = list.indexOf(key);
+            System.out.println("Key: " + key + ", Index: " + index);
+        }
+        return floorDiff <= ceilingDiff ? list.indexOf(floorEntry) : list.indexOf(ceilingEntry);
     }
 }
