@@ -1,19 +1,27 @@
 package com.example.ai_demo.dto;
 
 
+import lombok.Getter;
 
 public class StockExchangeOption {
 
-    private String StockExchange;
+    private String stockExchange;
     private Integer numberOfFiles;
 
 
+
+    public StockExchangeOption(String stockExchange, Integer numberOfFiles) {
+        this.stockExchange = stockExchange;
+        this.numberOfFiles = numberOfFiles;
+    }
+
+
     public String getStockExchange() {
-        return StockExchange;
+        return stockExchange;
     }
 
     public void setStockExchange(String stockExchange) {
-        StockExchange = stockExchange;
+        this.stockExchange = stockExchange;
     }
 
     public int getNumberOfFiles() {

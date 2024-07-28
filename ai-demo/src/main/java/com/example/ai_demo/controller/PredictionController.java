@@ -1,22 +1,24 @@
 package com.example.ai_demo.controller;
 
 
+import com.example.ai_demo.domain.DataPoint;
 import com.example.ai_demo.dto.StockExchangeOption;
-import lombok.Value;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping
@@ -34,37 +36,64 @@ public class PredictionController {
 
     private String otherApiBaseUrl;
 
-    @GetMapping("/predictions")
-    public ResponseEntity<String> predictNextThreeValues(@RequestBody List<StockExchangeOption> stockExchangeOptions){
+    @PostMapping("/predictions")
+    public ResponseEntity<String> predictNextThreeValues(@RequestBody List<StockExchangeOption> stockExchangeOptions) throws URISyntaxException, IOException, InterruptedException {
         RestTemplate restTemplate = new RestTemplate();
 
-        // Make a request to the first API
-     //   ResponseEntity<String> response1 = restTemplate.getForEntity("https://api1.example.com/data", String.class);
+        String baseUrl = "http://localhost:8080/exportCSV";
 
-        // Parse the response
-        // Assuming the response is JSON, use a JSON library to parse it
-        // Extract relevant data
 
-        // Construct a request to the second API using the extracted data
-     //   String requestBody = // ... construct request body using extracted data
+        for (StockExchangeOption so : stockExchangeOptions) {
+            for (int i = 0; i < so.getNumberOfFiles(); i++) {
+                String path = baseUrl + "/" + so.getStockExchange() + "/" + i;
 
-                // Make a request to the second API
-     //           ResponseEntity<String> response2 = restTemplate.postForEntity("https://api2.example.com/process", requestBody, String.class);
+                HttpClient httpClient = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(new URI(path))
+                        .build();
 
-        // Handle the response from the second API
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        String url = otherApiBaseUrl+"http://localhost:8080/exportCsv";
+                String csv = response.body();
+                List<DataPoint> dataPointList = getDataPointsFromCsv(csv);
+                List<DataPoint> prediction = predictNext(dataPointList);
 
-        Map<String, Integer> peopleMap = new HashMap<>();
-
-        // Iterate over the list and populate the HashMap
-        for (StockExchangeOption person : stockExchangeOptions) {
-            peopleMap.put(person.getStockExchange(), person.getNumberOfFiles());
+            }
         }
 
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+
+        ResponseEntity<String> response = restTemplate.getForEntity(baseUrl, String.class);
+
+
         String extractedData = response.getBody();
 
-        return  ResponseEntity.status(HttpStatus.OK).body(extractedData);
+        return ResponseEntity.status(HttpStatus.OK).body("");
     }
+
+
+    private List<DataPoint> getDataPointsFromCsv(String lista) {
+        String[] lines = lista.split("\\r?\\n|\\r");
+        List<DataPoint> list = new ArrayList<>();
+
+        for (int i = 0; i < lines.length; i++) {
+            String[] values = lines[i].split(",");
+            for (int j = 0; j < values.length; j++) {
+
+                values[j] = StringUtils.strip(values[j], "\"");
+            }
+            list.add(new DataPoint(values));
+        }
+
+        return list;
+    }
+
+    private List<DataPoint> predictNext(List<DataPoint> input){
+        List<DataPoint> list = new ArrayList<>();
+
+        return list;
+    };
+
+
 }
+
+
