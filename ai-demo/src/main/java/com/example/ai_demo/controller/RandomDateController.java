@@ -10,22 +10,20 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -74,6 +72,35 @@ public class RandomDateController {
 
     }
 
+
+    @GetMapping("/export-csv")
+    public ResponseEntity<StreamingResponseBody> exportCsv() {
+        HttpHeaders headers = new HttpHeaders();
+       // headers.setContentType(MediaType.TEXT_CSV);
+        headers.setContentDisposition(ContentDisposition.attachment().filename("data.csv").build());
+
+        return new ResponseEntity<>(outputStream -> {
+            Writer writer = new OutputStreamWriter(outputStream);
+            CSVWriter csvWriter = new CSVWriter(writer);
+
+            // Write header
+            String[] headerRecord = {"column1", "column2", "column3"};
+            csvWriter.writeNext(headerRecord);
+
+            // Write data
+            for (YourData dataItem : data) {
+                String[] dataRecord = {dataItem.getField1(), dataItem.getField2(), dataItem.getField3()};
+                csvWriter.writeNext(dataRecord);
+            }
+
+            csvWriter.close();
+            writer.flush();
+        }, headers, HttpStatus.OK);
+    }
+
+
+    
+
     public static void createCsv(List<DataPoint> datas, String fileName) throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
 
 
@@ -83,13 +110,32 @@ public class RandomDateController {
 //                    .build();
 //            beanToCsv.write(datas);
 
-            try (CSVWriter writer = new CSVWriter(new FileWriter(fileName))) {
+//        try (CSVWriter writer = new CSVWriter(new FileWriter(fileName))) {
+//            for (DataPoint line : datas) {
+//                writer.writeNext(line.toCsvLine());
+//            }
+//        }
+
+        try (CSVWriter writer = new CSVWriter(new FileWriter(fileName))) {
+            if (!datas.isEmpty()) {
                 for (DataPoint line : datas) {
-                    writer.writeNext(line.toCsvLine());
+                    String[] csvLine =line.toCsvLine();
+                    if (csvLine != null ) {
+                        writer.writeNext(csvLine);
+                    } else {
+                        System.err.println("Invalid DataPoint: " + line);
+                    }
                 }
-            }}
+            } else {
+                System.err.println("Empty data list");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle file I/O errors appropriately
+        }
 
     }
+}
 
 //    public String writeLineByLine(List<String[]> lines, Path path) throws Exception {
 //        try (CSVWriter writer = new CSVWriter(new FileWriter(path.toString()))) {
