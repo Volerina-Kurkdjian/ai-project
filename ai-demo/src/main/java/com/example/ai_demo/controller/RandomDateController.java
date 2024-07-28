@@ -57,6 +57,10 @@ public class RandomDateController {
                 .map(File::getName)
                 .collect(Collectors.toSet()));
 
+//        if (files.size() - 1 <= fileIndex){
+//            throw new RuntimeException();
+//        }
+
         String stockId = files.get(fileIndex);
         String finalPath = path + "\\" + stockId;//path catre fisierul csv
 
@@ -78,8 +82,8 @@ public class RandomDateController {
             }
 
             addCsv(csvWriter, list);
-            csvWriter.close();
             writer.flush();
+            csvWriter.close();
         }, headers, HttpStatus.OK);
 
     }

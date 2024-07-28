@@ -2,6 +2,7 @@ package com.example.ai_demo.service;
 
 import com.example.ai_demo.domain.DataPoint;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,12 @@ public class DataService {
         }
     }
 
+
+    public static void addCsv(CSVWriter writer, List<DataPoint> data) {
+        for (DataPoint dataItem : data) {
+            writer.writeNext(dataItem.toCsvLine());
+        }
+    }
 
     public LocalDateTime generateRandomTimestamp(List<DataPoint> dataPoints) {
 
