@@ -83,15 +83,17 @@ public class RandomDateController {
             Writer writer = new OutputStreamWriter(outputStream);
             CSVWriter csvWriter = new CSVWriter(writer);
 
-            // Write header
-            String[] headerRecord = {"column1", "column2", "column3"};
-            csvWriter.writeNext(headerRecord);
 
-            // Write data
-            for (YourData dataItem : data) {
-                String[] dataRecord = {dataItem.getField1(), dataItem.getField2(), dataItem.getField3()};
-                csvWriter.writeNext(dataRecord);
+            List<DataPoint> list= null;
+            try {
+                list = dataService.getConsecutiveDataPoints(
+                        Paths.get("C:\\Users\\corina\\Downloads\\ai-demo\\ai-demo\\src\\main\\java\\com\\example\\ai_demo\\LSEG\\FLTR.csv")
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
+
+            addCsv(csvWriter,  list);
 
             csvWriter.close();
             writer.flush();
@@ -99,7 +101,12 @@ public class RandomDateController {
     }
 
 
-    
+    public void addCsv(CSVWriter writer, List<DataPoint> data){
+        for (DataPoint dataItem : data) {
+               writer.writeNext(dataItem.toCsvLine() );
+        }
+    }
+
 
     public static void createCsv(List<DataPoint> datas, String fileName) throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
 
