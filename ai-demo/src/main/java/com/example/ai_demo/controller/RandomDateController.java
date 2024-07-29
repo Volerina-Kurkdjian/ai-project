@@ -2,13 +2,15 @@ package com.example.ai_demo.controller;
 
 
 import com.example.ai_demo.domain.DataPoint;
+import com.example.ai_demo.exceptions.ApiRequestException;
+import com.example.ai_demo.exceptions.MissingPathVariableException;
 import com.example.ai_demo.service.DataService;
 import com.opencsv.CSVWriter;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.xml.ws.http.HTTPException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -44,8 +45,21 @@ public class RandomDateController {
     public ResponseEntity<StreamingResponseBody> exportCSV(
             HttpServletResponse response,
             @PathVariable String stockExchange,
-            @PathVariable Integer fileIndex
+            @PathVariable  Integer fileIndex
     ) throws Exception {
+
+        Set<String> allowedstockExhangeValues=Set.of("LSEG","NASDAQ","NYSE");
+        if (StringUtils.isEmpty( stockExchange) || !allowedstockExhangeValues.contains(stockExchange)) {
+
+            throw new ApiRequestException("Invalid stock exchange: "+ stockExchange);
+
+        }
+
+        if(1 < fileIndex || fileIndex < 0){
+            throw new ApiRequestException("Invalid fileIndex: "+ fileIndex);
+        }
+
+
         //pathul catre folder
         String path = basePath + stockExchange;
         if (!Files.exists(Paths.get(path))) {

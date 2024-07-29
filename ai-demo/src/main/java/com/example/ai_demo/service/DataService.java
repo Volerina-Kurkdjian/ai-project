@@ -1,10 +1,12 @@
 package com.example.ai_demo.service;
 
 import com.example.ai_demo.domain.DataPoint;
+import com.example.ai_demo.exceptions.CsvException;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import org.springframework.stereotype.Service;
 import java.io.FileReader;
 import java.io.IOException;
@@ -18,7 +20,7 @@ import java.util.*;
 @Service
 public class DataService {
 
-    public List<DataPoint> getConsecutiveDataPoints(Path filePath) throws Exception {
+    public List<DataPoint> getConsecutiveDataPoints(Path filePath)  {
 
         List<DataPoint> list = new ArrayList<>();
         try (Reader reader = Files.newBufferedReader(filePath)) {
@@ -27,12 +29,12 @@ public class DataService {
                 while ((line = csvReader.readNext()) != null) {
                     list.add(new DataPoint(line));
                 }
+            } catch (IOException | CsvValidationException e) {
+                throw new CsvException("CSV not found");
             }
+        } catch (IOException e) {
+            throw new CsvException("CSV not found");
         }
-
-
-
-//       List<DataPoint> dataPoints=new ArrayList<>();
 
         LocalDateTime startTimestamp = generateRandomTimestamp(list);
 
